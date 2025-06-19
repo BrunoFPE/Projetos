@@ -1,0 +1,154 @@
+import random
+import time
+import os
+
+VIDA_MAXIMA = 100
+ENERGIA_MAXIMA = 100
+MOCHILA_LIMITE = 10
+
+vida = VIDA_MAXIMA
+energia = ENERGIA_MAXIMA
+mochila = []
+pontuacao = 0
+encontrou_saida = False
+tempo_passado = 0
+abrigo_montado = False
+
+itens = {
+    "fruta": {"vida": 5, "energia": 10},
+    "agua": {"vida": 10, "energia": 5},
+    "medicamento": {"vida": 20, "energia": 0},
+    "faca": {"ataque": 10},
+    "corda": {},
+    "lanterna": {},
+    "lenha": {}
+}
+
+animais = {
+    "lobo": {"dano": 20, "vida": 30},
+    "cobra": {"dano": 15, "vida": 20},
+    "urso": {"dano": 30, "vida": 40}
+}
+
+def mostrar_status():
+    print(f"\nVida: {vida} | Energia: {energia} | Pontuação: {pontuacao} | Tempo: {tempo_passado} dias")
+    print(f"Mochila: {mochila} (limite: {MOCHILA_LIMITE})")
+
+def adicionar_item(item):
+    if len(mochila) < MOCHILA_LIMITE:
+        mochila.append(item)
+        print(f"Item '{item}' adicionado à mochila.")
+    else:
+        print("Mochila cheia! Precisa descartar algo.")
+
+def buscar_comida():
+    global vida, energia, pontuacao
+    item = random.choice(["fruta", "agua"])
+    adicionar_item(item)
+    vida = min(VIDA_MAXIMA, vida + itens[item]['vida'])
+    energia = min(ENERGIA_MAXIMA, energia + itens[item]['energia'])
+    pontuacao += 10
+    print(f"Você encontrou uma {item}!")
+
+def montar_abrigo():
+    global energia, pontuacao, abrigo_montado
+    energia -= 15
+    pontuacao += 5
+    abrigo_montado = True
+    print("Você montou um abrigo e agora pode descansar com segurança.")
+
+def descansar():
+    global energia, vida, tempo_passado
+    if abrigo_montado:
+        energia = min(ENERGIA_MAXIMA, energia + 20)
+        vida = min(VIDA_MAXIMA, vida + 10)
+        print("Você descansou bem no abrigo. Vida e energia recuperadas.")
+    else:
+        energia = min(ENERGIA_MAXIMA, energia + 5)
+        print("Você descansou ao relento. Recuperou pouca energia.")
+    tempo_passado += 1
+
+def enfrentar_animal():
+    global vida, pontuacao
+    animal = random.choice(list(animais.keys()))
+    dano = animais[animal]['dano']
+    print(f"Você foi atacado por um {animal}! Ele causou {dano} de dano.")
+    if "faca" in mochila:
+        print("Você usou a faca para se defender e escapou com menos danos.")
+        dano = int(dano / 2)
+        pontuacao += 20
+    vida -= dano
+
+def explorar():
+    global energia, encontrou_saida, pontuacao
+    energia -= 20
+    evento = random.choices(
+        ["nada", "animal", "item", "saida"],
+        weights=[0.3, 0.3, 0.3, 0.1],
+    
+    )[0]
+    if evento == "animal":
+        enfrentar_animal()
+    elif evento == "item":
+        item = random.choice(["corda", "faca", "lanterna", "lenha"])
+        adicionar_item(item)
+        pontuacao += 15
+    elif evento == "saida":
+        if "corda" in mochila and "lanterna" in mochila:
+            encontrou_saida = True
+            pontuacao += 100
+            print("Você encontrou a saída e tinha os itens necessários para escapar!")
+        else:
+            print("Você encontrou a saída mas precisa de corda e lanterna para escapar.")
+    else:
+        pontuacao += 5
+        print("Você explorou mas não encontrou nada relevante.")
+
+def salvar_status_final():
+    with open("status_final.txt", "w") as f:
+        f.write(f"Vida final: {vida}\n")
+        f.write(f"Energia final: {energia}\n")
+        f.write(f"Pontuação: {pontuacao}\n")
+        f.write(f"Mochila: {mochila}\n")
+        f.write(f"Tempo de sobrevivência: {tempo_passado} dias\n")
+        f.write(f"Escapou?: {'Sim' if encontrou_saida else 'Não'}\n")
+
+
+print("""
+ JOGO DE AVENTURA: SOBREVIVENDO  NA FLORESTA 
+Você está perdido em uma floresta perigosa.E deve tentar ao maximo sobreviver
+""")
+
+while vida > 0 and not encontrou_saida:
+    mostrar_status()
+    print("\nEscolha sua ação:")
+    print("1 - Buscar comida")
+    print("2 - Montar abrigo")
+    print("3 - Explorar a floresta")
+    print("4 - Descansar")
+
+    escolha = input("Digite sua escolha (1/2/3/4): ")
+
+    if escolha == "1":
+        buscar_comida()
+    elif escolha == "2":
+        montar_abrigo()
+    elif escolha == "3":
+        explorar()
+    elif escolha == "4":
+        descansar()
+    else:
+        print("Escolha inválida.")
+
+    time.sleep(1)
+
+print("\n FIM DO JOGO")
+if encontrou_saida:
+    print("Parabéns! Você escapou da floresta, ate que não foi tão mal")
+else:
+    print("Você não resistiu aos perigos da floresta, Tenha mais cuidado da proxima vez...")
+
+salvar_status_final()
+print("\nSeu desempenho foi salvo em 'status_final.txt'")
+
+os.system("notepad status_final.txt")

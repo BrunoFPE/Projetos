@@ -1,0 +1,6 @@
+Vida final: -14
+Energia final: 60
+Pontuação: 5
+Mochila: []
+Tempo de sobrevivência: 0 dias
+Escapou?: Não
